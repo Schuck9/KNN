@@ -108,7 +108,12 @@ class KNN():
         mode_label = stats.mode(nearest_labels)[0][0] #计算出现最多的标签
         return mode_label
 
-    def generate_centroids(self,samples,samples_label= [],epochs = 50):
+    def generate_centroids(self,samples,samples_label= [],epochs = 100,viz = False):
+        '''
+        iterate samples to generate centroids until centroids maintain unchanged
+
+        return centroids centroid's label and labels indicate each sample belonging to which centroid
+        '''
         #获取随机的初始化聚点
         random_index = np.random.randint(0,samples.shape[0],self.centroids_num)
         centroids = samples[random_index]#variable
@@ -142,13 +147,18 @@ class KNN():
             if epoch%8 == 0:
                 print("\n[{}|{}]".format(epoch+1,epochs))
                 print("centroids:\n{}\ncentroids_label:\n{}".format(centroids,centroids_label))
+                if viz == True:
+                    self.viz_k_means(centroids,centroids_label,samples,labels)
         self.centroids = centroids
         self.centroids_label = centroids_label
 
         return centroids,centroids_label,labels
     
 
-    def K_Nearest(self,unknown_sample,samples,samples_label,kN = None):
+    def K_Nearest(self,unknown_sample,samples = [],samples_label =[],kN = None):
+        '''
+        using K_Nearest method to make prediction
+        '''
         #设定kN的个数 即最近邻样本的个数
         if kN == None:
             kN = self.kN #没有临时更改kN则使用预先给定的kN
@@ -166,6 +176,9 @@ class KNN():
         return pred
 
     def K_Means(self,unknown_sample,centroids = None,kN = None):
+        '''
+        using K_Means method to make prediction
+        '''
         #获取聚类结果 即均值点集
         if centroids == None:
             centroids = self.centroids #聚点集
@@ -180,13 +193,16 @@ class KNN():
         return pred
 
     def train(self,x_train=None,y_train=None):
+        '''
+        if method is k_means, calculate the centroids for after prediction
+        '''
         if x_train == None or y_train == None:
             x_train ,y_train = self.x_train,self.y_train
         print("training starts!")
         if self.method == "K_Nearest":
             print("training finished!")
         elif self.method == "K_Means":
-            centroids,centroids_label,labels = self.generate_centroids(x_train,y_train)
+            centroids,centroids_label,labels = self.generate_centroids(x_train,y_train,viz = True)
             self.centroids,self.centroids_label,self.labels = centroids,centroids_label,labels
             return centroids,centroids_label,labels
 
@@ -228,7 +244,30 @@ class KNN():
             plt.legend(loc = 'upper right')
             plt.show()
 
+    def viz_k_means(self,centroids,centroids_label,samples,labels,dot_size = 25):
+        '''
+        visualize centroids and samples belonging circumstances
+        '''
+        if self.method == "K_Means":
+            color_map = ["b","r","g","c","k","m","y"]
+            marker_map =["+","o","^","v","8","s","p","h","p"]
+            plt.rcParams['font.sans-serif']=['SimHei']
+            plt.rcParams['axes.unicode_minus'] = False
+            plt.title("聚点及样本点空间分布图 聚点数量:{}".format(self.centroids_num))
+
+            plt.scatter(centroids[:,0],centroids[:,1],c = centroids_label,marker=marker_map[-1],label="centroids",s=dot_size+45)
+            
+            sparated_dataset = self.dataset_sparated(samples,labels)
+            for i ,key in enumerate(sparated_dataset.keys()):
+                features,labels = sparated_dataset[key]
+                plt.scatter(features[:,0],features[:,1],marker=marker_map[i],color=color_map[i],label=key,s=dot_size)
+            plt.legend(loc = 'upper right')
+            plt.show()
+
     def experiment_build(self,data_path,datasets = "banana"):
+        '''
+        build experiment to illustrate algorithm's performance
+        '''
         if datasets == "banana":
             #加载数据集
             features,labels = self.data_generator(dataset_path)
@@ -291,8 +330,9 @@ if __name__=="__main__":
     os.chdir(Root_dir)
     dataset_path = os.path.join(datasets_dir,'banana.dat')
     kN = 7 
-    centroids_num=2
-    kN_Classifer = KNN(kN,centroids_num,method="K_Means")
+    centroids_num=7
+    kN_Classifer = KNN(centroids_num,method="K_Means")
+    # kN_Classifer = KNN(kN,method="K_Nearest")
     kN_Classifer.experiment_build(dataset_path,datasets="banana")
     # kN_Classifer.experiment_build(dataset_path,datasets="normal")
     

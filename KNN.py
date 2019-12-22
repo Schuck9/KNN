@@ -1,6 +1,6 @@
 """
 A simple implementation of K-Nearest and K-Means algorithm
-@data: 2019.12.21
+@data: 2019.12.22
 @author: Tingyu Mo
 """
 import pandas as pd
@@ -192,14 +192,15 @@ class KNN():
 
         return pred
 
-    def train(self,x_train=None,y_train=None):
+    def train(self,x_train=[],y_train=[]):
         '''
         if method is k_means, calculate the centroids for after prediction
         '''
-        if x_train == None or y_train == None:
+        if len(x_train) == 0 or len(y_train) == 0:
             x_train ,y_train = self.x_train,self.y_train
         print("training starts!")
         if self.method == "K_Nearest":
+            self.x_train,self.y_train = x_train ,y_train
             print("training finished!")
         elif self.method == "K_Means":
             centroids,centroids_label,labels = self.generate_centroids(x_train,y_train,viz = True)
@@ -226,7 +227,7 @@ class KNN():
         '''
         print("evalutation starts!")
         acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred,average='macro')
         return acc,prec
 
     def viz(self, data_one,data_two,pre_data_one,pre_data_two,dot_size = 15):
